@@ -12,6 +12,26 @@ Meal.destroy_all
 Dish.destroy_all 
 Cuisine.destroy_all 
 Recipe.destroy_all 
+User.destroy_all 
+# User Seed Data 
+barry = User.create(
+    email: "barryallen@gmail.com",
+    password: "Pass$123", 
+    admin: true, 
+    name: "Barry Allen"
+) 
+oliver = User.create(
+    email: "oliverqueen@outlook.com",
+    password: "Pass$123", 
+    admin: true, 
+    name: "Oliver Queen"
+) 
+tony = User.create(
+    email: "tonystark@gmail.com",
+    password: "Pass$123",
+    admin: false, 
+    name: "Tony Stark" 
+)
 # Meal Seed Data 
 breakfast = Meal.create(meal: "Breakfast") 
 lunch = Meal.create(meal: "Lunch") 
@@ -74,6 +94,7 @@ end
 recipes_api("Alcohols and cocktails", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: alcohols_and_cocktails,  
@@ -106,6 +127,7 @@ end
 recipes_api("Bread", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: bread,   
@@ -122,6 +144,7 @@ end
 recipes_api("Cereals", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: cereals,  
@@ -138,6 +161,7 @@ end
 recipes_api("Condiments and sauces", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: condiments_and_sauces,  
@@ -154,6 +178,7 @@ end
 recipes_api("Drinks", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: drinks,   
@@ -170,6 +195,7 @@ end
 recipes_api("Desserts", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: desserts,   
@@ -186,6 +212,7 @@ end
 recipes_api("Egg", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: egg,  
@@ -202,6 +229,7 @@ end
 recipes_api("Main course", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: main_course,  
@@ -218,6 +246,7 @@ end
 recipes_api("Omelet", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: omelet,  
@@ -234,6 +263,7 @@ end
 recipes_api("Pancakes", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: pancake,  
@@ -250,6 +280,7 @@ end
 recipes_api("Preps", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: preps,  
@@ -266,6 +297,7 @@ end
 recipes_api("Preserve", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: preserve,  
@@ -282,6 +314,7 @@ end
 recipes_api("Salad", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: salad,  
@@ -298,6 +331,7 @@ end
 recipes_api("Sandwiches", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: sandwiches,  
@@ -314,7 +348,8 @@ end
 recipes_api("Soup", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
-        cuisine: Cuisine.all.sample,  
+        user: User.all.sample, 
+        cuisine: Cuisine.all.sample, 
         meal: Meal.all.sample,    
         dish: soup,  
         ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
@@ -330,6 +365,7 @@ end
 recipes_api("Starter", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
+        user: User.all.sample, 
         cuisine: Cuisine.all.sample,  
         meal: Meal.all.sample,    
         dish: starter,  
