@@ -5,6 +5,11 @@ class UsersController < ApplicationController
           @user = User.find(params[:id])
           render json: @user
       end
+
+      def index 
+        users = User.all 
+        render json: users 
+      end 
   
       def login
         @user = User.find_by(email: params[:email])
@@ -38,9 +43,9 @@ class UsersController < ApplicationController
         else
           render json: {error: "A user with that email exists"}
         end
-  
       end
-  
+
+
       private
   
       def user_params

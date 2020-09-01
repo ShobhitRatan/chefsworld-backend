@@ -8,11 +8,12 @@
 require "pry" 
 require 'rest-client'
 require 'json' 
-Meal.destroy_all 
-Dish.destroy_all 
-Cuisine.destroy_all 
+
 Recipe.destroy_all 
 User.destroy_all 
+Comment.destroy_all 
+Address.destroy_all 
+WorkExperience.destroy_all
 # User Seed Data 
 barry = User.create(
     email: "barryallen@gmail.com",
@@ -32,350 +33,1136 @@ tony = User.create(
     admin: false, 
     name: "Tony Stark" 
 )
-# Meal Seed Data 
-breakfast = Meal.create(meal: "Breakfast") 
-lunch = Meal.create(meal: "Lunch") 
-dinner = Meal.create(meal: "Dinner") 
-snack = Meal.create(meal: "Snack") 
-teatime = Meal.create(meal: "Teatime") 
-# Dish Seed Data 
-alcohols_and_cocktails = Dish.create(dish: "Alcohols and cocktails")
-biscuits_and_cookies = Dish.create(dish: "Biscuits and cookies") 
-bread = Dish.create(dish: "Bread") 
-cereals = Dish.create(dish: "Cereals") 
-condiments_and_sauces = Dish.create(dish: "Condiments and sauces") 
-drinks = Dish.create(dish: "Drinks") 
-desserts = Dish.create(dish: "Desserts") 
-egg = Dish.create(dish: "Egg") 
-main_course = Dish.create(dish: "Main course") 
-omelet = Dish.create(dish: "Omelet") 
-pancake = Dish.create(dish: "Pancake")
-preps = Dish.create(dish: "Preps")
-preserve = Dish.create(dish: "Preserve") 
-salad = Dish.create(dish: "Salad") 
-sandwiches = Dish.create(dish: "Sandwiches") 
-soup = Dish.create(dish: "Soup") 
-starter = Dish.create(dish: "Starter")
-# Cuisine Seed Data 
-american = Cuisine.create(cuisine: "American") 
-asian = Cuisine.create(cuisine: "Asian") 
-british = Cuisine.create(cuisine: "British") 
-caribbean = Cuisine.create(cuisine: "Caribbean") 
-central_europe = Cuisine.create(cuisine: "Central Europe") 
-chinese = Cuisine.create(cuisine: "Chinese") 
-eastern_europe = Cuisine.create(cuisine: "Eastern Europe") 
-french = Cuisine.create(cuisine: "French") 
-indian = Cuisine.create(cuisine: "Indian") 
-italian = Cuisine.create(cuisine: "Italian") 
-japanese = Cuisine.create(cuisine: "Japanese") 
-kosher = Cuisine.create(cuisine: "Kosher") 
-mediterranean = Cuisine.create(cuisine: "Mediterranean") 
-mexican = Cuisine.create(cuisine: "Mexican") 
-middle_eastern = Cuisine.create(cuisine: "Middle Eastern") 
-nordic = Cuisine.create(cuisine: "Nordic") 
-south_american = Cuisine.create(cuisine: "South American") 
-south_east_asian = Cuisine.create(cuisine: "South East Asian") 
-# Recipes Seed Data 
+# Address seed data 
+address_1 = Address.create(
+    user: barry, 
+    address_type: "Home", 
+    address: "518 Queen Street", 
+    city: "Westbury", 
+    state: "New York", 
+    country: "United States", 
+    zipcode: "11590") 
+address_2 = Address.create(
+    user: oliver, 
+    address_type: "Office",
+    address: "One Bernard Baruch Way", 
+    city: "New York", 
+    state: "New York", 
+    country: "United States",
+    zipcode: "10010") 
+address_3 = Address.create(
+    user: tony, 
+    address_type: "Work",
+    address: "Avengers Tower",
+    city: "New York", 
+    state: "New York",
+    country: "United States",
+    zipcode: "10010" 
+)
+# Work Experience Data 
+work_experience_1 = WorkExperience.create(
+    user: barry, 
+    chef_type: "Head Chef",
+    experience: "5", 
+    employer_name: "Joe West",
+    start_date: "09/2014", 
+    end_date: "Present",
+    current_workplace: "Star Restaurant", 
+    title: "Head Chef", 
+    description: "Over 5 years of experience as a chef, specializes in American and Italian but expert in all cuisines.", 
+    city: "New York", 
+    state: "New York",
+    country: "United States"
+)
+# Recipes Seed Data
 app_id = ENV["app_id"]
 app_key = ENV["app_key"] 
 
-def recipes_api(q, id, key)  
+def meal_recipes_api(q, id, key, mealType, from, to)  
     base_url = "https://api.edamam.com/search?q=" 
     q = q.to_s  
     id = "&app_id=" + id.to_s 
-    key = "&app_key=" + key.to_s     
-    full_url = base_url + q + id + key
+    key = "&app_key=" + key.to_s   
+    mealType = "&mealType=" + mealType.to_s  
+    from = "&from=" + from.to_s 
+    to = "&to=" + to.to_s 
+    full_url = base_url + q + id + key + mealType + from + to 
     restClientResponseObject = RestClient.get(full_url) 
     jsonButItsAString = restClientResponseObject.body 
     workable_hash = JSON.parse(jsonButItsAString)
 end 
 
-
-recipes_api("Alcohols and cocktails", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "breakfast", 0.to_s, 100.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: alcohols_and_cocktails,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Biscuits and cookies", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
-    recipe = Recipe.create(
-        label: recipe["recipe"]["label"],
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: biscuits_and_cookies,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        image_url: recipe["recipe"]["image"],
-        source: recipe["recipe"]["source"], 
-        source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
-    )
-end 
-
-recipes_api("Bread", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "breakfast", 100.to_s, 200.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: bread,   
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Cereals", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "breakfast", 200.to_s, 300.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: cereals,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Condiments and sauces", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "breakfast", 300.to_s, 400.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: condiments_and_sauces,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Drinks", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "breakfast", 400.to_s, 500.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: drinks,   
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Desserts", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "lunch", 0.to_s, 100.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: desserts,   
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Egg", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "lunch", 100.to_s, 200.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: egg,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Main course", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "lunch", 200.to_s, 300.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: main_course,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Omelet", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "lunch", 300.to_s, 400.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: omelet,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Pancakes", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "lunch", 400.to_s, 500.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: pancake,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Preps", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "dinner", 0.to_s, 100.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: preps,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Preserve", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "dinner", 100.to_s, 200.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: preserve,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Salad", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "dinner", 200.to_s, 300.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: salad,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Sandwiches", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "dinner", 300.to_s, 400.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: sandwiches,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Soup", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "dinner", 400.to_s, 500.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample, 
-        meal: Meal.all.sample,    
-        dish: soup,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
 end 
 
-recipes_api("Starter", app_id.to_s, app_key.to_s)["hits"].each do |recipe| 
+meal_recipes_api("", app_id.to_s, app_key.to_s, "snack", 0.to_s, 100.to_s)["hits"].uniq.each do |recipe| 
     recipe = Recipe.create(
         label: recipe["recipe"]["label"],
         user: User.all.sample, 
-        cuisine: Cuisine.all.sample,  
-        meal: Meal.all.sample,    
-        dish: starter,  
-        ingredients: recipe["recipe"]["ingredientLines"].map{|i| "'" + i.to_s + "'"}.join(","), 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
         image_url: recipe["recipe"]["image"],
         source: recipe["recipe"]["source"], 
         source_url: recipe["recipe"]["url"], 
-        diet_labels: recipe["recipe"]["dietLabels"].map{|i| "'" + i.to_s + "'"}.join(","),
-        health_labels: recipe["recipe"]["healthLabels"].map{|i| "'" + i.to_s + "'"}.join(","), 
-        cautions: recipe["recipe"]["cautions"].map{|i| "'" + i.to_s + "'"}.join(",") 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
     )
+end 
+
+meal_recipes_api("", app_id.to_s, app_key.to_s, "snack", 100.to_s, 200.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+meal_recipes_api("", app_id.to_s, app_key.to_s, "snack", 200.to_s, 300.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+meal_recipes_api("", app_id.to_s, app_key.to_s, "snack", 300.to_s, 400.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+meal_recipes_api("", app_id.to_s, app_key.to_s, "snack", 400.to_s, 500.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+meal_recipes_api("", app_id.to_s, app_key.to_s, "teatime", 0.to_s, 100.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+meal_recipes_api("", app_id.to_s, app_key.to_s, "teatime", 100.to_s, 200.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+meal_recipes_api("", app_id.to_s, app_key.to_s, "teatime", 200.to_s, 300.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+meal_recipes_api("", app_id.to_s, app_key.to_s, "teatime", 300.to_s, 400.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+meal_recipes_api("", app_id.to_s, app_key.to_s, "teatime", 400.to_s, 500.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+def dish_recipes_api(q, id, key, dishType, from, to)  
+    base_url = "https://api.edamam.com/search?q=" 
+    q = q.to_s  
+    id = "&app_id=" + id.to_s 
+    key = "&app_key=" + key.to_s   
+    dishType = "&dishType=" + dishType.to_s  
+    from = "&from=" + from.to_s 
+    to = "&to=" + to.to_s 
+    full_url = base_url + q + id + key + dishType + from + to 
+    restClientResponseObject = RestClient.get(full_url) 
+    jsonButItsAString = restClientResponseObject.body 
+    workable_hash = JSON.parse(jsonButItsAString)
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Alcohol-cocktail", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Biscuits and cookies", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Bread", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Cereals", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Condiments and sauces", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Drinks", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Desserts", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Egg", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Main course", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Omelet", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Pancake", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Preps", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Preserve", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Salad", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Sandwiches", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Soup", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+dish_recipes_api("", app_id.to_s, app_key.to_s, "Starter", 0.to_s, 30.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+def cuisine_recipes_api(q, id, key, cuisineType, from, to)  
+    base_url = "https://api.edamam.com/search?q=" 
+    q = q.to_s  
+    id = "&app_id=" + id.to_s 
+    key = "&app_key=" + key.to_s   
+    cuisineType = "&dishType=" + cuisineType.to_s  
+    from = "&from=" + from.to_s 
+    to = "&to=" + to.to_s 
+    full_url = base_url + q + id + key + cuisineType + from + to 
+    restClientResponseObject = RestClient.get(full_url) 
+    jsonButItsAString = restClientResponseObject.body 
+    workable_hash = JSON.parse(jsonButItsAString)
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "American", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Asian", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "British", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Caribbean", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Central Europe", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Chinese", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Eastern Europe", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "French", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Indian", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Italian", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Japanese", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Kosher", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Mediterranean", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Mexican", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Middle Eastern", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "Nordic", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "South American", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "South East Asian", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+
+cuisine_recipes_api("", app_id.to_s, app_key.to_s, "world", 0.to_s, 20.to_s)["hits"].uniq.each do |recipe| 
+    recipe = Recipe.create(
+        label: recipe["recipe"]["label"],
+        user: User.all.sample, 
+        cuisine: recipe["recipe"]["cuisineType"].map{|i|  i.to_s }.join(","),   
+        meal: recipe["recipe"]["mealType"].map{|i|  i.to_s }.join(","),    
+        dish: recipe["recipe"]["dishType"].map{|i|  i.to_s }.join(","),   
+        ingredients: recipe["recipe"]["ingredientLines"].map{|i|  i.to_s }.join(","), 
+        image_url: recipe["recipe"]["image"],
+        source: recipe["recipe"]["source"], 
+        source_url: recipe["recipe"]["url"], 
+        diet_labels: recipe["recipe"]["dietLabels"].map{|i| i.to_s }.join(","),
+        health_labels: recipe["recipe"]["healthLabels"].map{|i| i.to_s }.join(","), 
+        cautions: recipe["recipe"]["cautions"].map{|i| i.to_s }.join(",") 
+    )
+end 
+# Comment seed data 
+1000.times do 
+    Comment.create({
+        recipe: Recipe.all.sample, 
+        user: User.all.sample,
+        content: Faker::TvShows::Suits.quote,
+        likes: rand(1..1000)
+    })
 end 
 

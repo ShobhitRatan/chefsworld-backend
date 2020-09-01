@@ -3,9 +3,9 @@ class CreateRecipes < ActiveRecord::Migration[6.0]
     create_table :recipes do |t|
       t.string :label 
       t.integer :user_id 
-      t.integer :cuisine_id 
-      t.integer :meal_id 
-      t.integer :dish_id 
+      t.string :meal 
+      t.string :dish 
+      t.string :cuisine 
       t.string  :ingredients 
       t.string :image_url 
       t.string :source 
