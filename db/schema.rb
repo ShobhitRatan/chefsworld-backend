@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_31_215752) do
+ActiveRecord::Schema.define(version: 2020_09_03_202524) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -39,6 +39,14 @@ ActiveRecord::Schema.define(version: 2020_08_31_215752) do
     t.index ["reset_password_token"], name: "index_admins_on_reset_password_token", unique: true
   end
 
+  create_table "awards", force: :cascade do |t|
+    t.string "description"
+    t.integer "user_id"
+    t.string "received_date"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
   create_table "comments", force: :cascade do |t|
     t.integer "user_id"
     t.integer "recipe_id"
@@ -56,6 +64,16 @@ ActiveRecord::Schema.define(version: 2020_08_31_215752) do
     t.string "enrollment_status"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "followships", force: :cascade do |t|
+    t.integer "follower_id"
+    t.integer "followee_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["followee_id"], name: "index_followships_on_followee_id"
+    t.index ["follower_id", "followee_id"], name: "index_followships_on_follower_id_and_followee_id", unique: true
+    t.index ["follower_id"], name: "index_followships_on_follower_id"
   end
 
   create_table "recipes", force: :cascade do |t|
@@ -85,6 +103,8 @@ ActiveRecord::Schema.define(version: 2020_08_31_215752) do
     t.datetime "updated_at", precision: 6, null: false
     t.boolean "admin"
     t.string "name"
+    t.string "image_1"
+    t.string "image_2"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

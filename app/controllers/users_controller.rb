@@ -51,10 +51,22 @@ class UsersController < ApplicationController
         render json: @user 
       end
 
+      def follow 
+        @user = User.find(params[:id]) 
+        logged_in_user.followees << @user 
+        render json: @user 
+      end 
+
+      def unfollow 
+        @user = User.find(params[:id]) 
+        logged_in_user.followed_users.find_by(followee_id: @user.id).destroy 
+        render json: @user 
+      end 
+
       private
   
       def user_params
-        params.permit(:email, :password, :name) 
+        params.permit(:email, :password, :name, :image_1, :image_2)  
       end
   
   end

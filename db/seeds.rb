@@ -14,25 +14,37 @@ User.destroy_all
 Comment.destroy_all 
 Address.destroy_all 
 WorkExperience.destroy_all
+Followship.destroy_all 
 # User Seed Data 
 barry = User.create(
     email: "barryallen@gmail.com",
     password: "Pass$123", 
     admin: true, 
-    name: "Barry Allen"
+    name: "Barry Allen", 
+    image_1: "https://vignette.wikia.nocookie.net/garpedia/images/d/d5/Barry_Allen.jpg/revision/latest?cb=20190213172819", 
+    image_2: "https://vignette.wikia.nocookie.net/arrow/images/9/90/The_Flash.png/revision/latest?cb=20200507231946"
 ) 
 oliver = User.create(
     email: "oliverqueen@outlook.com",
     password: "Pass$123", 
     admin: true, 
-    name: "Oliver Queen"
+    name: "Oliver Queen", 
+    image_1: "https://vignette.wikia.nocookie.net/arrow/images/c/c4/Oliver_Queen.png/revision/latest?cb=20200614203702", 
+    image_2: "https://vignette.wikia.nocookie.net/arrow/images/d/d1/Green_Arrow.png/revision/latest?cb=20200528020024"
 ) 
 tony = User.create(
     email: "tonystark@gmail.com",
     password: "Pass$123",
     admin: false, 
-    name: "Tony Stark" 
+    name: "Tony Stark", 
+    image_1: "https://m.hindustantimes.com/rf/image_size_1200x900/HT/p2/2019/08/12/Pictures/_ca1ae8d6-bcf4-11e9-9bc9-c6f10a5dc6e3.jpg",
+    image_2: "https://pbs.twimg.com/profile_images/1114951635116208128/MF1zYXby_400x400.png" 
 )
+# Followships seed data
+followship_1 = Followship.create(follower: barry, followee: oliver) 
+followship_2 = Followship.create(follower: oliver, followee: barry) 
+followship_3 = Followship.create(follower: oliver, followee: tony) 
+followship_4 = Followship.create(follower: tony, followee: oliver) 
 # Address seed data 
 address_1 = Address.create(
     user: barry, 

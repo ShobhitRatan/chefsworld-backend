@@ -1,8 +1,8 @@
 class RecipesController < ApplicationController
-    include Pagy::Backend 
+    # include Pagy::Backend 
     def index 
-        pagy, recipes = pagy_extended(Recipe.all) 
-        # recipes = Recipe.all  
+        # pagy, recipes = pagy_extended(Recipe.all) 
+        recipes = Recipe.all  
         render json: recipes 
     end  
 
@@ -33,17 +33,17 @@ class RecipesController < ApplicationController
         end 
     end 
 
-    def pagy_extended(collection, vars={})
-        pagy, paginated = pagy(collection, vars)
-        { current_page: pagy.page,
-          next_page:    pagy.next,
-          prev_page:    pagy.prev,
-          total_pages:  pagy.pages,
-          total_count:  pagy.count }.each do |meth, val|
-          paginated.define_singleton_method(meth){ val }
-        end
-        return pagy, paginated
-      end
+    # def pagy_extended(collection, vars={})
+    #     pagy, paginated = pagy(collection, vars)
+    #     { current_page: pagy.page,
+    #       next_page:    pagy.next,
+    #       prev_page:    pagy.prev,
+    #       total_pages:  pagy.pages,
+    #       total_count:  pagy.count }.each do |meth, val|
+    #       paginated.define_singleton_method(meth){ val }
+    #     end
+    #     return pagy, paginated
+    #   end
 
     private 
 
