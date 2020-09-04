@@ -429,7 +429,7 @@ meal_recipes_api("", app_id.to_s, app_key.to_s, "snack", 80.to_s, 100.to_s)["hit
 end 
 
 # Comment seed data 
-1000.times do 
+100.times do 
     Comment.create({
         recipe: Recipe.all.sample, 
         user: User.all.sample,
