@@ -66,16 +66,6 @@ ActiveRecord::Schema.define(version: 2020_09_03_202524) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
-  create_table "followships", force: :cascade do |t|
-    t.integer "follower_id"
-    t.integer "followee_id"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
-    t.index ["followee_id"], name: "index_followships_on_followee_id"
-    t.index ["follower_id", "followee_id"], name: "index_followships_on_follower_id_and_followee_id", unique: true
-    t.index ["follower_id"], name: "index_followships_on_follower_id"
-  end
-
   create_table "recipes", force: :cascade do |t|
     t.string "label"
     t.integer "user_id"

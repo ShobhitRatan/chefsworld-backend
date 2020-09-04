@@ -14,7 +14,6 @@ User.destroy_all
 Comment.destroy_all 
 Address.destroy_all 
 WorkExperience.destroy_all
-Followship.destroy_all 
 # User Seed Data 
 barry = User.create(
     email: "barryallen@gmail.com",
@@ -40,11 +39,7 @@ tony = User.create(
     image_1: "https://m.hindustantimes.com/rf/image_size_1200x900/HT/p2/2019/08/12/Pictures/_ca1ae8d6-bcf4-11e9-9bc9-c6f10a5dc6e3.jpg",
     image_2: "https://pbs.twimg.com/profile_images/1114951635116208128/MF1zYXby_400x400.png" 
 )
-# Followships seed data
-followship_1 = Followship.create(follower: barry, followee: oliver) 
-followship_2 = Followship.create(follower: oliver, followee: barry) 
-followship_3 = Followship.create(follower: oliver, followee: tony) 
-followship_4 = Followship.create(follower: tony, followee: oliver) 
+ 
 # Address seed data 
 address_1 = Address.create(
     user: barry, 
