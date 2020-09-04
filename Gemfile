@@ -46,4 +46,5 @@ gem 'pry'
 gem 'faker'
 gem 'active_model_serializers'
 gem 'devise'
-
+gem 'redis'
+gem 'hiredis'

@@ -89,6 +89,7 @@ GEM
     ffi (1.13.1)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
+    hiredis (0.6.3)
     http-accept (1.7.0)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
@@ -162,6 +163,7 @@ GEM
     rb-fsevent (0.10.4)
     rb-inotify (0.10.1)
       ffi (~> 1.0)
+    redis (4.2.1)
     responders (3.0.1)
       actionpack (>= 5.0)
       railties (>= 5.0)
@@ -205,6 +207,7 @@ DEPENDENCIES
   devise
   dotenv-rails
   faker
+  hiredis
   json
   jwt
   listen (~> 3.2)
@@ -213,6 +216,7 @@ DEPENDENCIES
   puma (~> 4.1)
   rack-cors
   rails (~> 6.0.3, >= 6.0.3.2)
+  redis
   rest-client
   spring
   spring-watcher-listen (~> 2.0.0)
