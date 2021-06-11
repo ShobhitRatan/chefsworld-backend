@@ -21,8 +21,7 @@
 </ol>
 <h2>Core Features</h2>
 <ul>
-    <li>A user can register to the website</li>
-    <li>A user can login to the website</li> 
+    <li>Registration</li>
     <li>Implemented Authentication using JSON Web Token and Local Storage to encrypt user data.</li>
     <li>Ability to enter and update detailed professional experience as chef.</li> 
     <li>Ability to search recipes by type, cuisine, ratings, country and other parameters.</li>
